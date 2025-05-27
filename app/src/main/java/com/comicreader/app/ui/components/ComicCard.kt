@@ -16,7 +16,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.comicreader.app.data.Comic
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,11 +32,11 @@ fun ComicCard(
         animationSpec = spring(dampingRatio = 0.6f),
         label = "card_scale"
     )
-    
+
     Card(
         modifier = modifier
             .scale(scale)
-            .clickable { 
+            .clickable {
                 isPressed = true
                 onClick()
             },
@@ -54,7 +54,7 @@ fun ComicCard(
                     .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
                 contentScale = ContentScale.Crop
             )
-            
+
             // Comic Info
             Column(
                 modifier = Modifier.padding(12.dp)
@@ -65,9 +65,9 @@ fun ComicCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = comic.author,
                     style = MaterialTheme.typography.bodyMedium,
@@ -75,9 +75,9 @@ fun ComicCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Rating and Genre
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -100,11 +100,11 @@ fun ComicCard(
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
-                    
+
                     // Genre Badge
                     AssistChip(
                         onClick = { },
-                        label = { 
+                        label = {
                             Text(
                                 text = comic.genre,
                                 style = MaterialTheme.typography.labelSmall
@@ -113,7 +113,7 @@ fun ComicCard(
                         modifier = Modifier.height(24.dp)
                     )
                 }
-                
+
                 // Progress indicator if comic is partially read
                 if (comic.currentPage > 0) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -131,7 +131,7 @@ fun ComicCard(
             }
         }
     }
-    
+
     LaunchedEffect(isPressed) {
         if (isPressed) {
             kotlinx.coroutines.delay(100)

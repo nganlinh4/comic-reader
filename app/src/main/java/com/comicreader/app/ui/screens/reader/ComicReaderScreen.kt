@@ -32,7 +32,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.comicreader.app.data.SampleComicData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -48,12 +48,12 @@ fun ComicReaderScreen(
         initialPage = comic?.currentPage ?: 0,
         pageCount = { comic?.pages?.size ?: 0 }
     )
-    
+
     var showUI by remember { mutableStateOf(true) }
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     val coroutineScope = rememberCoroutineScope()
-    
+
     // Auto-hide UI after 3 seconds
     LaunchedEffect(showUI) {
         if (showUI) {
@@ -61,7 +61,7 @@ fun ComicReaderScreen(
             showUI = false
         }
     }
-    
+
     val transformableState = rememberTransformableState { zoomChange, offsetChange, _ ->
         scale = (scale * zoomChange).coerceIn(1f, 5f)
         offset = if (scale > 1f) {
@@ -70,7 +70,7 @@ fun ComicReaderScreen(
             Offset.Zero
         }
     }
-    
+
     if (comic == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -80,7 +80,7 @@ fun ComicReaderScreen(
         }
         return
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -123,7 +123,7 @@ fun ComicReaderScreen(
                 }
         ) { page ->
             val comicPage = comic.pages[page]
-            
+
             AsyncImage(
                 model = comicPage.imageUrl,
                 contentDescription = "Page ${comicPage.pageNumber}",
@@ -138,7 +138,7 @@ fun ComicReaderScreen(
                 contentScale = ContentScale.Fit
             )
         }
-        
+
         // Top App Bar
         AnimatedVisibility(
             visible = showUI,
@@ -146,7 +146,7 @@ fun ComicReaderScreen(
             exit = slideOutVertically() + fadeOut()
         ) {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         text = comic.title,
                         color = Color.White
@@ -182,7 +182,7 @@ fun ComicReaderScreen(
                 )
             )
         }
-        
+
         // Bottom Controls
         AnimatedVisibility(
             visible = showUI,
@@ -207,9 +207,9 @@ fun ComicReaderScreen(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Page Info
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -221,7 +221,7 @@ fun ComicReaderScreen(
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        
+
                         Row {
                             // Previous Button
                             Button(
@@ -237,7 +237,7 @@ fun ComicReaderScreen(
                             ) {
                                 Text("Previous")
                             }
-                            
+
                             // Next Button
                             Button(
                                 onClick = {

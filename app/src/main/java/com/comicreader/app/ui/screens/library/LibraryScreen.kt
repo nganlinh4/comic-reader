@@ -24,7 +24,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.comicreader.app.data.Comic
 import com.comicreader.app.data.SampleComicData
 import com.comicreader.app.ui.components.ComicCard
@@ -40,13 +40,13 @@ fun LibraryScreen(
     val comics = remember { SampleComicData.sampleComics }
     val recentComics = remember { comics.take(3) }
     val featuredComics = remember { comics.shuffled().take(5) }
-    
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         // Top App Bar with search
         TopAppBar(
-            title = { 
+            title = {
                 Text(
                     "Comic Library",
                     style = MaterialTheme.typography.headlineMedium
@@ -65,7 +65,7 @@ fun LibraryScreen(
                 titleContentColor = MaterialTheme.colorScheme.onSurface
             )
         )
-        
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -85,7 +85,7 @@ fun LibraryScreen(
                     )
                 }
             }
-            
+
             // Continue Reading Section
             item {
                 Column {
@@ -108,7 +108,7 @@ fun LibraryScreen(
                     }
                 }
             }
-            
+
             // All Comics Grid
             item {
                 Text(
@@ -117,7 +117,7 @@ fun LibraryScreen(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
-            
+
             item {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 150.dp),
@@ -134,14 +134,14 @@ fun LibraryScreen(
                 }
             }
         }
-        
+
         // FAB for Continue Reading
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.BottomEnd
         ) {
             ExtendedFloatingActionButton(
-                onClick = { 
+                onClick = {
                     // Navigate to last read comic
                     if (recentComics.isNotEmpty()) {
                         onComicClick(recentComics.first().id)

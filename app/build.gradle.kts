@@ -67,6 +67,9 @@ dependencies {
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.4.0-alpha15")
     implementation("com.google.android.material:material:1.14.0-alpha01")
 
+    // Material Icons Extended
+    implementation("androidx.compose.material:material-icons-extended")
+
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.9.0")
 

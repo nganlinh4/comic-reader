@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.comicreader.app.data.Comic
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -32,7 +32,7 @@ fun FeaturedComicCarousel(
     modifier: Modifier = Modifier
 ) {
     val pagerState = rememberPagerState(pageCount = { comics.size })
-    
+
     Column(modifier = modifier) {
         // Carousel
         HorizontalPager(
@@ -49,7 +49,7 @@ fun FeaturedComicCarousel(
                 animationSpec = spring(dampingRatio = 0.8f),
                 label = "carousel_scale"
             )
-            
+
             Card(
                 modifier = Modifier
                     .fillMaxSize()
@@ -66,7 +66,7 @@ fun FeaturedComicCarousel(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-                    
+
                     // Gradient Overlay
                     Box(
                         modifier = Modifier
@@ -82,7 +82,7 @@ fun FeaturedComicCarousel(
                                 )
                             )
                     )
-                    
+
                     // Content
                     Column(
                         modifier = Modifier
@@ -97,9 +97,9 @@ fun FeaturedComicCarousel(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
-                        
+
                         Spacer(modifier = Modifier.height(4.dp))
-                        
+
                         Text(
                             text = comic.author,
                             style = MaterialTheme.typography.bodyMedium,
@@ -107,9 +107,9 @@ fun FeaturedComicCarousel(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         Text(
                             text = comic.description,
                             style = MaterialTheme.typography.bodySmall,
@@ -121,10 +121,10 @@ fun FeaturedComicCarousel(
                 }
             }
         }
-        
+
         // Page Indicators
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -137,22 +137,22 @@ fun FeaturedComicCarousel(
                     animationSpec = spring(dampingRatio = 0.8f),
                     label = "indicator_size"
                 )
-                
+
                 Box(
                     modifier = Modifier
                         .size(size.dp)
                         .clip(CircleShape)
                         .background(
-                            if (isSelected) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
+                            if (isSelected)
+                                MaterialTheme.colorScheme.primary
+                            else
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                         )
                         .clickable {
                             // Animate to selected page
                         }
                 )
-                
+
                 if (index < comics.size - 1) {
                     Spacer(modifier = Modifier.width(8.dp))
                 }
