@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.ComicReader" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/comic_primary</item>
+        <item name="colorOnPrimary">@color/comic_on_primary</item>
+        <item name="colorPrimaryContainer">@color/comic_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/comic_on_primary_container</item>
+        <item name="colorSecondary">@color/comic_secondary</item>
+        <item name="colorOnSecondary">@color/comic_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/comic_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/comic_on_secondary_container</item>
+        <item name="colorTertiary">@color/comic_tertiary</item>
+        <item name="colorOnTertiary">@color/comic_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/comic_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/comic_on_tertiary_container</item>
+        <item name="colorError">@color/comic_error</item>
+        <item name="colorOnError">@color/comic_on_error</item>
+        <item name="colorErrorContainer">@color/comic_error_container</item>
+        <item name="colorOnErrorContainer">@color/comic_on_error_container</item>
+        <item name="android:colorBackground">@color/comic_background</item>
+        <item name="colorOnBackground">@color/comic_on_background</item>
+        <item name="colorSurface">@color/comic_surface</item>
+        <item name="colorOnSurface">@color/comic_on_surface</item>
+        <item name="colorSurfaceVariant">@color/comic_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/comic_on_surface_variant</item>
+        <item name="colorOutline">@color/comic_outline</item>
+    </style>
+</resources>
