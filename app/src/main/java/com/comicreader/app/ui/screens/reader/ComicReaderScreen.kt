@@ -20,20 +20,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ViewModule
+import androidx.compose.material.icons.filled.ViewQuilt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
+import com.comicreader.app.data.ReadingMode
 import com.comicreader.app.data.SampleComicData
+import com.comicreader.app.ui.components.PanelNavigationState
+import com.comicreader.app.ui.components.PanelOverlay
+import com.comicreader.app.ui.components.findPanelAtPoint
+import com.comicreader.app.ui.components.rememberPanelNavigationState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -44,15 +56,46 @@ fun ComicReaderScreen(
     onBackClick: () -> Unit
 ) {
     val comic = remember { SampleComicData.sampleComics.find { it.id == comicId } }
+
+    if (comic == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Comic not found")
+        }
+        return
+    }
+
+    val panelNavState = rememberPanelNavigationState(
+        comic = comic,
+        initialPageIndex = comic.currentPage
+    )
+
     val pagerState = rememberPagerState(
-        initialPage = comic?.currentPage ?: 0,
-        pageCount = { comic?.pages?.size ?: 0 }
+        initialPage = panelNavState.currentPageIndex,
+        pageCount = { comic.pages.size }
     )
 
     var showUI by remember { mutableStateOf(true) }
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    var imageSize by remember { mutableStateOf(Size.Zero) }
+    var canvasSize by remember { mutableStateOf(Size.Zero) }
     val coroutineScope = rememberCoroutineScope()
+
+    // Sync pager state with panel navigation state
+    LaunchedEffect(panelNavState.currentPageIndex) {
+        if (pagerState.currentPage != panelNavState.currentPageIndex) {
+            pagerState.animateScrollToPage(panelNavState.currentPageIndex)
+        }
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage != panelNavState.currentPageIndex) {
+            panelNavState.goToPage(pagerState.currentPage)
+        }
+    }
 
     // Auto-hide UI after 3 seconds
     LaunchedEffect(showUI) {
@@ -71,16 +114,6 @@ fun ComicReaderScreen(
         }
     }
 
-    if (comic == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Comic not found")
-        }
-        return
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -92,30 +125,47 @@ fun ComicReaderScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .transformable(state = transformableState)
-                .pointerInput(Unit) {
+                .onSizeChanged { canvasSize = it.toSize() }
+                .pointerInput(panelNavState.readingMode, panelNavState.currentPageIndex) {
                     detectTapGestures(
                         onTap = { tapOffset ->
-                            val screenWidth = size.width
-                            when {
-                                tapOffset.x < screenWidth * 0.3f -> {
-                                    // Previous page
-                                    if (pagerState.currentPage > 0) {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                            when (panelNavState.readingMode) {
+                                ReadingMode.PANEL -> {
+                                    val currentPage = panelNavState.currentPage
+                                    if (currentPage != null && currentPage.panels.isNotEmpty()) {
+                                        val panelIndex = findPanelAtPoint(
+                                            panels = currentPage.panels,
+                                            tapPoint = tapOffset,
+                                            canvasSize = canvasSize,
+                                            imageSize = imageSize
+                                        )
+
+                                        if (panelIndex != null) {
+                                            panelNavState.goToPanel(panelNavState.currentPageIndex, panelIndex)
+                                        } else {
+                                            // Tap outside panels, toggle UI
+                                            showUI = !showUI
                                         }
+                                    } else {
+                                        showUI = !showUI
                                     }
                                 }
-                                tapOffset.x > screenWidth * 0.7f -> {
-                                    // Next page
-                                    if (pagerState.currentPage < comic.pages.size - 1) {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                ReadingMode.PAGE -> {
+                                    val screenWidth = size.width
+                                    when {
+                                        tapOffset.x < screenWidth * 0.3f -> {
+                                            // Previous page
+                                            panelNavState.previousPage()
+                                        }
+                                        tapOffset.x > screenWidth * 0.7f -> {
+                                            // Next page
+                                            panelNavState.nextPage()
+                                        }
+                                        else -> {
+                                            // Toggle UI
+                                            showUI = !showUI
                                         }
                                     }
-                                }
-                                else -> {
-                                    // Toggle UI
-                                    showUI = !showUI
                                 }
                             }
                         }
@@ -124,19 +174,49 @@ fun ComicReaderScreen(
         ) { page ->
             val comicPage = comic.pages[page]
 
-            AsyncImage(
-                model = comicPage.imageUrl,
-                contentDescription = "Page ${comicPage.pageNumber}",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    ),
-                contentScale = ContentScale.Fit
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = comicPage.imageUrl,
+                    contentDescription = "Page ${comicPage.pageNumber}",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
+                        ),
+                    contentScale = ContentScale.Fit,
+                    onState = { state ->
+                        if (state is AsyncImagePainter.State.Success) {
+                            val drawable = state.result.drawable
+                            imageSize = Size(
+                                drawable.intrinsicWidth.toFloat(),
+                                drawable.intrinsicHeight.toFloat()
+                            )
+                        }
+                    }
+                )
+
+                // Panel overlay for panel reading mode
+                if (panelNavState.readingMode == ReadingMode.PANEL &&
+                    page == panelNavState.currentPageIndex &&
+                    comicPage.panels.isNotEmpty()) {
+                    PanelOverlay(
+                        panels = comicPage.panels,
+                        currentPanelIndex = panelNavState.currentPanelIndex,
+                        imageSize = imageSize,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer(
+                                scaleX = scale,
+                                scaleY = scale,
+                                translationX = offset.x,
+                                translationY = offset.y
+                            )
+                    )
+                }
+            }
         }
 
         // Top App Bar
@@ -162,6 +242,23 @@ fun ComicReaderScreen(
                     }
                 },
                 actions = {
+                    // Reading mode toggle
+                    IconButton(
+                        onClick = { panelNavState.toggleReadingMode() }
+                    ) {
+                        Icon(
+                            imageVector = when (panelNavState.readingMode) {
+                                ReadingMode.PAGE -> Icons.Default.ViewQuilt
+                                ReadingMode.PANEL -> Icons.Default.ViewModule
+                            },
+                            contentDescription = when (panelNavState.readingMode) {
+                                ReadingMode.PAGE -> "Switch to Panel Mode"
+                                ReadingMode.PANEL -> "Switch to Page Mode"
+                            },
+                            tint = Color.White
+                        )
+                    }
+
                     IconButton(onClick = { /* TODO: Bookmark */ }) {
                         Icon(
                             Icons.Default.Bookmark,
@@ -201,23 +298,40 @@ fun ComicReaderScreen(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
+                    // Reading mode indicator
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = when (panelNavState.readingMode) {
+                                ReadingMode.PAGE -> "Page Reading Mode"
+                                ReadingMode.PANEL -> "Panel Reading Mode"
+                            },
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     // Progress Bar
                     LinearProgressIndicator(
-                        progress = { (pagerState.currentPage + 1).toFloat() / comic.pages.size },
+                        progress = { panelNavState.getProgressPercentage() },
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primary
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Page Info
+                    // Progress Info
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Page ${pagerState.currentPage + 1} of ${comic.pages.size}",
+                            text = panelNavState.getProgressText(),
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -226,30 +340,38 @@ fun ComicReaderScreen(
                             // Previous Button
                             Button(
                                 onClick = {
-                                    if (pagerState.currentPage > 0) {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                                        }
+                                    when (panelNavState.readingMode) {
+                                        ReadingMode.PAGE -> panelNavState.previousPage()
+                                        ReadingMode.PANEL -> panelNavState.previousPanel()
                                     }
                                 },
-                                enabled = pagerState.currentPage > 0,
+                                enabled = panelNavState.canGoPrevious(),
                                 modifier = Modifier.padding(end = 8.dp)
                             ) {
-                                Text("Previous")
+                                Text(
+                                    when (panelNavState.readingMode) {
+                                        ReadingMode.PAGE -> "Previous"
+                                        ReadingMode.PANEL -> "Prev Panel"
+                                    }
+                                )
                             }
 
                             // Next Button
                             Button(
                                 onClick = {
-                                    if (pagerState.currentPage < comic.pages.size - 1) {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                                        }
+                                    when (panelNavState.readingMode) {
+                                        ReadingMode.PAGE -> panelNavState.nextPage()
+                                        ReadingMode.PANEL -> panelNavState.nextPanel()
                                     }
                                 },
-                                enabled = pagerState.currentPage < comic.pages.size - 1
+                                enabled = panelNavState.canGoNext()
                             ) {
-                                Text("Next")
+                                Text(
+                                    when (panelNavState.readingMode) {
+                                        ReadingMode.PAGE -> "Next"
+                                        ReadingMode.PANEL -> "Next Panel"
+                                    }
+                                )
                             }
                         }
                     }
